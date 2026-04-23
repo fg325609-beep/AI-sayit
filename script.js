@@ -1,182 +1,73 @@
-// ========== KONFIGURATSIYA ==========
-const BOT_API_URL = "http://localhost:5000/send-message";
-
-// 1. Preloader (Yaxshilandi: sahifa to'liq yuklangach o'chadi)
-window.addEventListener('load', function() {
-    const preloader = document.getElementById('preloader');
-    if (preloader) {
-        setTimeout(() => {
-            preloader.style.opacity = '0';
-            preloader.style.visibility = 'hidden';
-        }, 800);
+// Barcha funksiyalarni bitta joyga jamlaymiz
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. AOS Init
+    if (typeof AOS !== 'undefined') {
+        AOS.init({ duration: 900, once: false });
     }
-});
 
-// 2. AOS init
-AOS.init({
-    duration: 900,
-    once: false,
-    mirror: true,
-    offset: 100,
-});
+    // 2. Mobile Menu
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => navLinks.classList.toggle('active'));
+    }
 
-// 3. Mobile Menu
-const menuToggle = document.getElementById('menuToggle');
-const navLinks = document.getElementById('navLinks');
+    // 3. Telegramga xabar yuborish
+    const sendBtn = document.getElementById('sendMsgBtn');
+    const statusDiv = document.getElementById('formStatus');
 
-if (menuToggle) {
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
-}
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); // Sahifa yangilanib ketishini to'xtatish
 
-document.querySelectorAll('.nav-links li a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-    });
-});
+            const name = document.getElementById('nameInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+            const telegram = document.getElementById('tgInput').value.trim();
+            const message = document.getElementById('msgInput').value.trim();
 
-// 4. Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href').substring(1);
-        const target = document.getElementById(targetId);
-        if(target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-});
-
-const exploreBtn = document.getElementById('exploreBtn');
-if (exploreBtn) {
-    exploreBtn.addEventListener('click', () => {
-        const servicesSection = document.getElementById('services');
-        if (servicesSection) servicesSection.scrollIntoView({ behavior: 'smooth' });
-    });
-}
-
-// 5. Counter animation
-const counters = document.querySelectorAll('.counter');
-let counted = false;
-
-const startCounters = () => {
-    counters.forEach(counter => {
-        const updateCount = () => {
-            const target = parseInt(counter.getAttribute('data-target'));
-            let current = parseInt(counter.innerText) || 0;
-            const increment = Math.ceil(target / 25);
-            if(current < target) {
-                current += increment;
-                if(current > target) current = target;
-                counter.innerText = current;
-                setTimeout(updateCount, 30);
-            } else {
-                counter.innerText = target;
+            if (!name || !email || !message) {
+                showStatus("❌ Iltimos, barcha maydonlarni to'ldiring!", "red");
+                return;
             }
-        };
-        updateCount();
-    });
-};
 
-const statsSection = document.querySelector('.stats');
-if (statsSection) {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if(entry.isIntersecting && !counted) {
-                startCounters();
-                counted = true;
-                observer.unobserve(statsSection);
+            // Tugmani bloklash
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = "Yuborilmoqda... <i class='fas fa-spinner fa-pulse'></i>";
+
+            try {
+                const response = await fetch('http://localhost:5000/send-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, telegram, message })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showStatus("✅ Xabar muvaffaqiyatli yuborildi!", "#4caf50");
+                    // Formani tozalash
+                    document.getElementById('nameInput').value = "";
+                    document.getElementById('emailInput').value = "";
+                    document.getElementById('tgInput').value = "";
+                    document.getElementById('msgInput').value = "";
+                } else {
+                    showStatus("❌ Xatolik yuz berdi!", "red");
+                }
+            } catch (error) {
+                showStatus("⚠️ Server bilan aloqa yo'q! (bot.py ishlayotganini tekshiring)", "red");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = "Xabar yuborish";
             }
         });
-    }, { threshold: 0.5 });
-    observer.observe(statsSection);
-}
+    }
 
-// 6. Mouse glow effect
-const cards = document.querySelectorAll('.service-card, .portfolio-item');
-cards.forEach(card => {
-    card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--x', `${x}px`);
-        card.style.setProperty('--y', `${y}px`);
-    });
+    function showStatus(text, color) {
+        if (statusDiv) {
+            statusDiv.innerHTML = text;
+            statusDiv.style.color = color;
+            setTimeout(() => { statusDiv.innerHTML = ""; }, 5000);
+        }
+    }
 });
-
-// 7. ========== TELEGRAM BOTGA XABAR YUBORISH (To'g'rilandi) ==========
-const sendMsgBtn = document.getElementById('sendMsgBtn');
-
-if (sendMsgBtn) {
-    sendMsgBtn.addEventListener('click', async () => {
-        const nameInput = document.getElementById('nameInput');
-        const emailInput = document.getElementById('emailInput');
-        const tgInput = document.getElementById('tgInput');
-        const msgInput = document.getElementById('msgInput');
-        const statusDiv = document.getElementById('formStatus');
-
-        const name = nameInput.value.trim();
-        const email = emailInput.value.trim();
-        const telegramUsername = tgInput.value.trim();
-        const message = msgInput.value.trim();
-
-        // Validatsiya
-        if (!name || !email || !message) {
-            showStatus(statusDiv, "❌ Ism, email va xabarni to‘ldiring!", "#ff6b6b");
-            return;
-        }
-
-        // Email formatini tekshirish (Oddiy)
-        if (!email.includes('@')) {
-            showStatus(statusDiv, "❌ Email xato kiritildi!", "#ff6b6b");
-            return;
-        }
-
-        const originalText = sendMsgBtn.innerHTML;
-        sendMsgBtn.innerHTML = "Yuborilmoqda... <i class='fas fa-spinner fa-pulse'></i>";
-        sendMsgBtn.disabled = true;
-
-        try {
-            const response = await fetch(BOT_API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: name,
-                    email: email,
-                    telegram: telegramUsername || "Ko'rsatilmagan",
-                    message: message
-                })
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                showStatus(statusDiv, "✅ Xabar muvaffaqiyatli yuborildi!", "#4caf50");
-                // Formalarni tozalash
-                nameInput.value = '';
-                emailInput.value = '';
-                tgInput.value = '';
-                msgInput.value = '';
-            } else {
-                throw new Error(result.error || "Xatolik yuz berdi");
-            }
-        } catch (error) {
-            console.error("Xatolik:", error);
-            showStatus(statusDiv, "⚠️ Xato! Bot ishlayotganini tekshiring.", "#ff6b6b");
-        } finally {
-            sendMsgBtn.innerHTML = originalText;
-            sendMsgBtn.disabled = false;
-        }
-    });
-}
-
-// Status xabarlarini ko'rsatish uchun yordamchi funksiya
-function showStatus(element, text, color) {
-    if (!element) return;
-    element.style.color = color;
-    element.innerHTML = text;
-    setTimeout(() => {
-        element.innerHTML = "";
-    }, 5000);
-}
