@@ -7,8 +7,8 @@ from flask_cors import CORS
 import threading
 
 # ========== KONFIGURATSIYA ==========
-TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # <--- O'z tokeningizni yozing
-TARGET_CHAT_ID = "Farhod00111"  # Username yoki Chat ID (masalan: "@Farhod00111" yoki raqam)
+TELEGRAM_BOT_TOKEN = "8603541744:AAFFVaIXmreKNPbUSUR4H5GXqVx2PSaK6-Y"  # <--- O'z tokeningizni yozing
+TARGET_CHAT_ID = "AiXabar_bot"  # Username yoki Chat ID (masalan: "@Farhod00111" yoki raqam)
 
 # Flask server (saytdan POST qabul qilish uchun)
 app_flask = Flask(__name__)
@@ -51,7 +51,7 @@ async def send_telegram_message(text):
     """Telegram bot orqali xabar yuborish"""
     try:
         bot = telegram_app.bot
-        await bot.send_message(chat_id=TARGET_CHAT_ID, text=text, parse_mode="Markdown")
+        await bot.send_message(chat_id=6660879147, text=text, parse_mode="Markdown")
         print("✅ Xabar Telegramga yuborildi!")
     except Exception as e:
         print(f"❌ Xatolik: {e}")

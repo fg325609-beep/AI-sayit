@@ -1,4 +1,4 @@
-# AI-sayit
+pip install python-telegram-bot flask flask-cors
 # 1. Kutubxonalarni o‘rnating
 pip install -r requirements.txt
 
@@ -8,4 +8,3 @@ pip install -r requirements.txt
 
 # 3. Botni ishga tushiring
 python bot.py
-pip install python-telegram-bot flask flask-cors
