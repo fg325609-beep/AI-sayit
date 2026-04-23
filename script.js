@@ -1,3 +1,18 @@
+fetch('http://localhost:5000/send-message', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        name: "Farhod",
+        email: "test@mail.com",
+        telegram: "@username",
+        message: "Assalomu alaykum, bot ishlayaptimi?"
+    })
+})
+.then(res => res.json())
+.then(data => console.log(data));
+
 // Preloader
 window.addEventListener('load', function() {
     const preloader = document.getElementById('preloader');
